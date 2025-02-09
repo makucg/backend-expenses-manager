@@ -1,0 +1,47 @@
+services:
+  web:
+    build:
+      context: ../..
+      dockerfile: docker/local/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../..:/app
+    environment:
+      - POSTGRES_SERVER=db
+      - ELASTICSEARCH_HOST=elasticsearch
+      - REDIS_HOST=redis
+    depends_on:
+      db:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  db:
+    image: postgres:latest
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=expense_manager_db
+    ports:
+      - "5432:5432"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.1
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
